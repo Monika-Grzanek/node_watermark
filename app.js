@@ -66,19 +66,53 @@ const addImageWatermarkToImage = async function(inputFile, outputFile, watermark
       message: 'What file do you want to mark?',
       default: 'test.jpg',
     }, {
+      name: 'changeFile',
+      message: 'Do you want to edit this file?',
+      type: 'confirm'
+    }]);
+    if(options.changeFile) {
+      const change = await inquirer.prompt([{
+        name: 'changesOption',
+        type: 'list',
+        choices: ['make image brighter', 'increase contrast', 'make image b&w', 'invert image'],
+      }])
+    } 
+
+    if(options.changeFile === 'make image brighter') {
+      const picture = await jimp.read('./img/' + options.inputImage);
+      picture.lighten(30);
+      console.log('Great! Your image is brighter')
+      } else if (options.changeFile === 'increase contrast') {
+        const picture = await jimp.read('./img/' + options.inputImage);
+        picture.contrast(70);
+        console.log('Great! Your image is more contrasting')
+      } else if (options.changeFile === 'make image b&w') {
+        async function greyscale() {
+          const picture = await jimp.read(options.inputImage);
+          picture.grayscale(0).write(options.inputImage);
+        }
+        greyscale();
+        console.log('Great! Your image is black & white')
+      } else {
+        const picture = await jimp.read('./img/' + options.inputImage);
+        picture.invert();
+        console.log('Great! Your image has been inverted.')
+      }
+    const optionType = await inquirer.prompt([{
       name: 'watermarkType',
       type: 'list',
       choices: ['Text watermark', 'Image watermark'],
-    }]);
-    if(options.watermarkType === 'Text watermark') {
+    }])
+
+    if(optionType.watermarkType === 'Text watermark') {
       const text = await inquirer.prompt([{
         name: 'value',
         type: 'input',
         message: 'Type your watermark text:',
       }]);
-      options.watermarkText = text.value;
+      optionType.watermarkText = text.value;
       if(fs.existsSync('./img/' + options.inputImage)) {
-        addTextWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), options.watermarkText);
+        addTextWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), optionType.watermarkText);
       }
       else {
         console.log('Something went wrong... Try again')
@@ -91,9 +125,9 @@ const addImageWatermarkToImage = async function(inputFile, outputFile, watermark
         message: 'Type your watermark name:',
         default: 'logo.png',
       }]);
-      options.watermarkImage = image.filename;
-      if(fs.existsSync(('./img/' + options.inputImage) && ('./img/' + options.watermarkImage))){
-        addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
+      optionType.watermarkImage = image.filename;
+      if(fs.existsSync(('./img/' + options.inputImage) && ('./img/' + optionType.watermarkImage))){
+        addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + optionType.watermarkImage);
       }
       else {
         console.log('Something went wrong... Try again')
